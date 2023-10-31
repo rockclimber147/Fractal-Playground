@@ -74,19 +74,21 @@ class MainCanvas {
             that.draw();
         });
         this.canvas.on('mousewheel DOMMouseScroll', function (event) {
-            that.xPan += event.pageX - that.canvasOffset.left;
-            that.yPan += event.pageY - that.canvasOffset.top;
+            let previousZoomCoefficient = that.zoomCoefficient;
+            let mouseX = event.pageX - that.canvasOffset.left;
+            let mouseY = event.pageY - that.canvasOffset.top;
             if (event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
-                console.log('scroll up');
-                that.zoomCoefficient *= .95;
+                that.zoomCoefficient /= .95;
             }
             else {
-                that.zoomCoefficient *= 20/19;
-                console.log('scroll down');
+                that.zoomCoefficient *= .95;
             }
+            let zoomChange = previousZoomCoefficient - that.zoomCoefficient
+
+            that.xPan -= (mouseX * that.zoomCoefficient) * (zoomChange - 1);
+            that.yPan -= (mouseY * that.zoomCoefficient) * (zoomChange - 1);
+            
             that.draw();
-            that.xPan -= event.pageX - that.canvasOffset.left;
-            that.yPan -= event.pageY - that.canvasOffset.top;
         });
     }
 
@@ -94,11 +96,13 @@ class MainCanvas {
         this.ctx.clearRect(0, 0, this.canvas.width(), this.canvas.height());
         this.ctx.beginPath();
 
-        this.ctx.moveTo((this.points[0][0] - this.xPan) * this.zoomCoefficient + this.xPan, 
-            (this.points[0][1] - this.xPan) * this.zoomCoefficient + this.yPan);
+        this.ctx.moveTo(
+            this.points[0][0] * this.zoomCoefficient + this.xPan, 
+            this.points[0][1] * this.zoomCoefficient + this.yPan);
         for (let i = 1; i < this.points.length; i++) {
-            this.ctx.lineTo((this.points[i][0] + this.xPan) * this.zoomCoefficient, 
-                (this.points[i][1] + this.yPan) * this.zoomCoefficient);
+            this.ctx.lineTo(
+                this.points[i][0] * this.zoomCoefficient + this.xPan, 
+                this.points[i][1] * this.zoomCoefficient + this.yPan);
         }
         this.ctx.stroke();
     }
