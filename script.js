@@ -6,6 +6,11 @@ class MainCanvas {
     dragging = true;
     lastMouseX;
     lastMouseY;
+    // pan and zoom model 1
+    xPan = 0;
+    yPan = 0;
+    zoomCoefficient = 1;
+    // Pan and zoom model 2
     virtualBounds;
     xSpan;
     ySpan;
@@ -47,6 +52,10 @@ class MainCanvas {
                 // get difference from last set of coords
                 let dX = currentX - that.lastMouseX;
                 let dY = currentY - that.lastMouseY;
+                that.xPan += dX;
+                that.yPan += dY;
+                console.log(that.xPan, that.yPan)
+
                 // update virtual bounds
                 that.virtualBounds[0] += dX;
                 that.virtualBounds[1] += dY;
@@ -65,21 +74,31 @@ class MainCanvas {
             that.draw();
         });
         this.canvas.on('mousewheel DOMMouseScroll', function (event) {
+            that.xPan += event.pageX - that.canvasOffset.left;
+            that.yPan += event.pageY - that.canvasOffset.top;
             if (event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
                 console.log('scroll up');
+                that.zoomCoefficient *= .95;
             }
             else {
+                that.zoomCoefficient *= 20/19;
                 console.log('scroll down');
             }
+            that.draw();
+            that.xPan -= event.pageX - that.canvasOffset.left;
+            that.yPan -= event.pageY - that.canvasOffset.top;
         });
     }
 
     draw() {
         this.ctx.clearRect(0, 0, this.canvas.width(), this.canvas.height());
         this.ctx.beginPath();
-        this.ctx.moveTo(this.points[0][0], this.points[0][1]);
+
+        this.ctx.moveTo((this.points[0][0] - this.xPan) * this.zoomCoefficient + this.xPan, 
+            (this.points[0][1] - this.xPan) * this.zoomCoefficient + this.yPan);
         for (let i = 1; i < this.points.length; i++) {
-            this.ctx.lineTo(this.points[i][0], this.points[i][1]);
+            this.ctx.lineTo((this.points[i][0] + this.xPan) * this.zoomCoefficient, 
+                (this.points[i][1] + this.yPan) * this.zoomCoefficient);
         }
         this.ctx.stroke();
     }
@@ -93,3 +112,4 @@ class MainCanvas {
 }
 
 let mainCanvas = new MainCanvas('#canvas');
+mainCanvas.draw();
