@@ -10,12 +10,16 @@ class InteractableCanvas {
         this.canvasView = new CanvasView(this.canvasInterface);
         this.canvasInputHandler = new CanvasInputHandler(this.canvasInterface, this);
         this.canvasModel = new CanvasModel();
-        
-        
+
+
     }
     init() {
         this.canvasView.loadPointArray(this.canvasModel.originalPoints);
         this.update();
+    }
+
+    toggleDrawing() {
+        this.canvasModel.isDrawing = !this.canvasModel.isDrawing;
     }
 
     update() {
@@ -31,7 +35,7 @@ class canvasInterface {
     toggleButton;
     resetButton;
 
-    
+
     constructor() {
         this.mainContainer = document.createElement('div');
         this.topRow = document.createElement('div');
@@ -42,7 +46,7 @@ class canvasInterface {
         this.structureNodes();
     }
 
-    setText(){
+    setText() {
         this.toggleButton.innerHTML = 'Toggle';
         this.resetButton.innerHTML = 'Reset';
     }
@@ -73,7 +77,7 @@ class CanvasView {
         this.points = points;
     }
 
-    drawPoints(){
+    drawPoints() {
         this.ctx.clearRect(0, 0, this.canvasInterface.canvas.width, this.canvasInterface.canvas.height);
         this.ctx.beginPath();
         this.ctx.moveTo(this.points[0].x, this.points[0].y);
@@ -96,12 +100,11 @@ class CanvasInputHandler {
         this.canvasOffset = this.canvasInterface.canvas.getBoundingClientRect();
         this.inputState = new CanvasInputState();
 
-        this.addMouseInputListeners();
-        this.addButtonListeners();
+        this.addMouseInputListeners(this);
+        this.addButtonListeners(this);
     }
 
-    addMouseInputListeners() {
-        let currentHandler = this;
+    addMouseInputListeners(currentHandler) {
 
         this.canvasInterface.canvas.addEventListener('mouseenter', function () {
             currentHandler.inputState.mouseInBounds = true;
@@ -141,12 +144,15 @@ class CanvasInputHandler {
         });
     }
 
-    addButtonListeners(){
-        this.canvasInterface.toggleButton.addEventListener('click', function(){
-            console.log('toggle');
+    addButtonListeners(currentHandler) {
+
+        this.canvasInterface.toggleButton.addEventListener('click', function () {
+            console.log('TOGGLE BUTTON CLICKED');
+            currentHandler.parent.toggleDrawing();
+            currentHandler.parent.update();
         });
-        this.canvasInterface.resetButton.addEventListener('click', function(){
-            console.log('reset');
+        this.canvasInterface.resetButton.addEventListener('click', function () {
+            console.log('RESET BUTTON CLICKED');
         });
     }
 
@@ -161,6 +167,7 @@ class CanvasModel {
     currentPoint;
     previousInputState;
     currentInputState;
+    isDrawing = true;
 
     zoomLevel = 0;
 
@@ -178,13 +185,26 @@ class CanvasModel {
         this.currentInputState.setAllFields(incomingInputState);
 
         this.zoomLevel += this.currentInputState.zoomState;
+        if (this.isDrawing) {
+            this.updatePoints();
+        } else {
+            this.updatePosition();
+        }
+    }
 
+    updatePoints() {
         if (!this.previousInputState.mouseIsDown && this.currentInputState.mouseIsDown) {
             console.log('ADDING POINT')
             this.addPointFromMouseCoordinates();
         } else if (this.previousInputState.mouseIsDown && this.currentInputState.mouseIsDown) {
             console.log('MOVING POINT')
             this.editPointFromMouseCoordinates();
+        }
+    }
+
+    updatePosition() {
+        if (this.previousInputState.mouseIsDown && this.currentInputState.mouseIsDown) {
+            console.log('MOVING CANVAS')
         }
     }
 
@@ -232,7 +252,7 @@ class CanvasInputState {
 
 let c = new InteractableCanvas('canvasTestContainer');
 let d = new InteractableCanvas('canvasTestContainer');
-d.canvasModel.setOriginalPoints([new Point(0,0), new Point(50,100)])
-c.canvasModel.setOriginalPoints([new Point(0,0), new Point(50,100), new Point(150,25)])
+d.canvasModel.setOriginalPoints([new Point(0, 0), new Point(50, 100)])
+c.canvasModel.setOriginalPoints([new Point(0, 0), new Point(50, 100), new Point(150, 25)])
 d.init();
 c.init();
