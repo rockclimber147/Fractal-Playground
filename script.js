@@ -1,119 +1,185 @@
-class MainCanvas {
-    canvas;
-    ctx;
-    canvasOffset;
-    mouseIsPressed = false;
-    dragging = true;
-    lastMouseX;
-    lastMouseY;
-    // pan and zoom model 1
-    xPan = 0;
-    yPan = 0;
-    zoomCoefficient = 1;
-    // Pan and zoom model 2
-    virtualBounds;
-    xSpan;
-    ySpan;
-
-    points = [[0, 0], [50, 100], [150, 25]];
+class InteractableCanvas {
+    canvasView;
+    canvasInputHandler;
+    canvasModel;
 
     constructor(canvasID) {
-        var that = this; // store object this as this refers to the element inside listeners
+        this.canvasView = new CanvasView(canvasID);
+        this.canvasInputHandler = new CanvasInputHandler(canvasID, this);
+        this.canvasModel = new CanvasModel();
 
-        this.canvas = jQuery($(canvasID).get(0));
-        this.ctx = canvas.getContext('2d');
-        this.canvasOffset = this.canvas.offset();
-
-        // [x0, y0, xMax, yMax] To be changed when zoomed
-        this.virtualBounds = [0, 0, that.canvas.width(), that.canvas.height()]
-        this.xSpan = this.virtualBounds[2] - this.virtualBounds[0]; // x difference
-        this.ySpan = this.virtualBounds[3] - this.virtualBounds[1]; // y difference
-
-        console.log(this.canvasOffset.left)
-        // Event handlers
-        this.canvas.on('mousedown', function (event) {
-            that.mouseIsPressed = true;
-            if (that.dragging) {
-                that.lastMouseX = event.pageX - that.canvasOffset.left;
-                that.lastMouseY = event.pageY - that.canvasOffset.top;
-            } else {
-                that.points.push([event.pageX - that.canvasOffset.left, event.pageY - that.canvasOffset.top])
-                that.draw();
-            }
-        });
-        this.canvas.mousemove(function (event) {
-            if (!that.mouseIsPressed) {
-                return;
-            }
-            if (that.dragging) {
-                // get mouse coordinates on drag
-                let currentX = event.pageX - that.canvasOffset.left;
-                let currentY = event.pageY - that.canvasOffset.top;
-                // get difference from last set of coords
-                let dX = currentX - that.lastMouseX;
-                let dY = currentY - that.lastMouseY;
-                that.xPan += dX;
-                that.yPan += dY;
-                console.log(that.xPan, that.yPan)
-
-                // update virtual bounds
-                that.virtualBounds[0] += dX;
-                that.virtualBounds[1] += dY;
-                that.virtualBounds[2] += dX;
-                that.virtualBounds[3] += dY;
-                // update last coordinates
-                that.lastMouseX = currentX;
-                that.lastMouseY = currentY;
-            } else {
-                that.points[that.points.length - 1] = [event.pageX - that.canvasOffset.left, event.pageY - that.canvasOffset.top];
-            }
-            that.draw();
-        })
-        this.canvas.on('mouseup', function () {
-            that.mouseIsPressed = false;
-            that.draw();
-        });
-        this.canvas.on('mousewheel DOMMouseScroll', function (event) {
-            let previousZoomCoefficient = that.zoomCoefficient;
-            let mouseX = event.pageX - that.canvasOffset.left;
-            let mouseY = event.pageY - that.canvasOffset.top;
-            if (event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
-                that.zoomCoefficient /= .95;
-            }
-            else {
-                that.zoomCoefficient *= .95;
-            }
-            let zoomChange = previousZoomCoefficient - that.zoomCoefficient
-
-            that.xPan -= (mouseX * that.zoomCoefficient) * (zoomChange - 1);
-            that.yPan -= (mouseY * that.zoomCoefficient) * (zoomChange - 1);
-            
-            that.draw();
-        });
+        
+    }
+    init() {
+        this.canvasView.loadPointArray(this.canvasModel.originalPoints);
     }
 
-    draw() {
+    update() {
+        this.canvasModel.update(this.canvasInputHandler.getInputState());
+        this.canvasView.drawPoints();
+    }
+}
+
+class CanvasView {
+    points;
+    canvas;
+    ctx;
+
+    constructor(canvasID) {
+        this.canvas = jQuery($(canvasID).get(0));
+        this.ctx = canvas.getContext('2d');
+
+        this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 5;
+    }
+
+    loadPointArray(points) {
+        this.points = points;
+    }
+
+    drawPoints(){
         this.ctx.clearRect(0, 0, this.canvas.width(), this.canvas.height());
         this.ctx.beginPath();
-
-        this.ctx.moveTo(
-            this.points[0][0] * this.zoomCoefficient + this.xPan, 
-            this.points[0][1] * this.zoomCoefficient + this.yPan);
+        this.ctx.moveTo(this.points[0].x, this.points[0].y);
         for (let i = 1; i < this.points.length; i++) {
-            this.ctx.lineTo(
-                this.points[i][0] * this.zoomCoefficient + this.xPan, 
-                this.points[i][1] * this.zoomCoefficient + this.yPan);
+            this.ctx.lineTo(this.points[i].x, this.points[i].y);
         }
         this.ctx.stroke();
     }
+}
 
-    whenMouseIsPressed(event) {
-        this.mouseIsPressed = false;
-        console.log(this.mouseIsPressed);
-        this.appendPoint([event.pageX - canvasOffset.left, event.pageY - canvasOffset.top]);
+class CanvasInputHandler {
+    parent;
+    canvasDOM;
+    canvasOffset;
+    inputState;
+
+    constructor(canvasID, parent) {
+        this.parent = parent;
+        this.canvasDOM = jQuery($(canvasID).get(0));
+        this.canvasOffset = this.canvasDOM.offset();
+        this.inputState = new CanvasInputState();
+
+        let currentHandler = this;
+
+        this.canvasDOM.on('mouseenter', function () {
+            currentHandler.inputState.mouseInBounds = true;
+        });
+
+        this.canvasDOM.on('mouseleave', function () {
+            currentHandler.inputState.mouseInBounds = false;
+            currentHandler.parent.update();
+        });
+
+        this.canvasDOM.on('mousedown', function () {
+            currentHandler.inputState.mouseIsDown = true;
+            currentHandler.parent.update();
+        });
+
+        this.canvasDOM.on('mouseup', function () {
+            currentHandler.inputState.mouseIsDown = false;
+            currentHandler.parent.update();
+        });
+
+        this.canvasDOM.on('mousemove', function (event) {
+            currentHandler.inputState.mouseX = event.pageX - currentHandler.canvasOffset.left;
+            currentHandler.inputState.mouseY = event.pageY - currentHandler.canvasOffset.top;
+            currentHandler.parent.update();
+        });
+
+        this.canvasDOM.on('mousewheel DOMMouseScroll', function (event) {
+            if (event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
+                currentHandler.inputState.zoomState = 1;
+            }
+            else {
+                currentHandler.inputState.zoomState = -1;
+            }
+            currentHandler.parent.update();
+            currentHandler.inputState.zoomState = 0;
+        });
+    }
+
+    getInputState() {
+        return this.inputState;
     }
 
 }
 
-let mainCanvas = new MainCanvas('#canvas');
-mainCanvas.draw();
+class CanvasModel {
+    originalPoints = [];
+    currentPoint;
+    previousInputState;
+    currentInputState;
+
+    zoomLevel = 0;
+
+    constructor() {
+        this.previousInputState = new CanvasInputState();
+        this.currentInputState = new CanvasInputState();
+    }
+
+    setOriginalPoints(points) {
+        this.originalPoints = points;
+    }
+
+    update(incomingInputState) {
+        this.previousInputState.setAllFields(this.currentInputState);
+        this.currentInputState.setAllFields(incomingInputState);
+        console.log(this.currentInputState.toString());
+
+        this.zoomLevel += this.currentInputState.zoomState;
+
+        if (!this.previousInputState.mouseIsDown && this.currentInputState.mouseIsDown) {
+            console.log('ADDING POINT')
+            this.addPointFromMouseCoordinates();
+        } else if (this.previousInputState.mouseIsDown && this.currentInputState.mouseIsDown) {
+            console.log('MOVING POINT')
+            this.editPointFromMouseCoordinates();
+        }
+    }
+
+    addPointFromMouseCoordinates() {
+        this.originalPoints.push(new Point(this.currentInputState.mouseX, this.currentInputState.mouseY));
+        this.currentPoint = this.originalPoints[this.originalPoints.length - 1];
+    }
+
+    editPointFromMouseCoordinates() {
+        this.currentPoint.x = this.currentInputState.mouseX;
+        this.currentPoint.y = this.currentInputState.mouseY;
+    }
+}
+
+class Point {
+    x;
+    y;
+
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+    }
+
+}
+
+class CanvasInputState {
+    mouseIsDown = false;
+    mouseInBounds = false;
+    mouseX = 0;
+    mouseY = 0;
+    zoomState = 0;
+
+    setAllFields(canvasInputState) {
+        this.mouseIsDown = canvasInputState.mouseIsDown;
+        this.mouseInBounds = canvasInputState.mouseInBounds;
+        this.mouseX = canvasInputState.mouseX;
+        this.mouseY = canvasInputState.mouseY;
+        this.zoomState = canvasInputState.zoomState;
+    }
+
+    toString() {
+        return "mouseIsDown: " + this.mouseIsDown + " mouseX: " + this.mouseX + " mouseY: " + this.mouseY + " zoomState: " + this.zoomState + " mouseInBounds: " + this.mouseInBounds;
+    }
+}
+
+let c = new InteractableCanvas('#canvas');
+c.canvasModel.setOriginalPoints([new Point(0,0), new Point(50,100), new Point(150,25)])
+c.init();
