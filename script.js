@@ -1,17 +1,21 @@
 class InteractableCanvas {
+    canvasInterface;
     canvasView;
     canvasInputHandler;
     canvasModel;
 
-    constructor(canvasID) {
-        this.canvasView = new CanvasView(canvasID);
-        this.canvasInputHandler = new CanvasInputHandler(canvasID, this);
+    constructor(destinationContainerID) {
+        this.canvasInterface = new canvasInterface();
+        document.getElementById(destinationContainerID).append(this.canvasInterface.mainContainer);
+        this.canvasView = new CanvasView(this.canvasInterface);
+        this.canvasInputHandler = new CanvasInputHandler(this.canvasInterface, this);
         this.canvasModel = new CanvasModel();
-
+        
         
     }
     init() {
         this.canvasView.loadPointArray(this.canvasModel.originalPoints);
+        this.update();
     }
 
     update() {
@@ -20,14 +24,49 @@ class InteractableCanvas {
     }
 }
 
+class canvasInterface {
+    mainContainer;
+    topRow;
+    canvas;
+    toggleButton;
+    resetButton;
+    closeButton;
+    
+    constructor() {
+        this.mainContainer = document.createElement('div');
+        this.topRow = document.createElement('div');
+        this.canvas = document.createElement('canvas');
+        this.toggleButton = document.createElement('button');
+        this.resetButton = document.createElement('button');
+        this.closeButton = document.createElement('button');
+        this.setText();
+        this.structureNodes();
+    }
+
+    setText(){
+        this.toggleButton.innerHTML = 'Toggle';
+        this.resetButton.innerHTML = 'Reset';
+        this.closeButton.innerHTML = 'Close';
+    }
+
+    structureNodes() {
+        this.topRow.appendChild(this.toggleButton);
+        this.topRow.appendChild(this.resetButton);
+        this.topRow.appendChild(this.closeButton);
+        this.mainContainer.appendChild(this.topRow);
+        this.mainContainer.appendChild(this.canvas);
+    }
+
+}
+
 class CanvasView {
     points;
-    canvas;
+    canvasInterface;
     ctx;
 
-    constructor(canvasID) {
-        this.canvas = jQuery($(canvasID).get(0));
-        this.ctx = canvas.getContext('2d');
+    constructor(canvasInterface) {
+        this.canvasInterface = canvasInterface;
+        this.ctx = canvasInterface.canvas.getContext('2d');
 
         this.ctx.strokeStyle = '#000000';
         this.ctx.lineWidth = 5;
@@ -38,7 +77,7 @@ class CanvasView {
     }
 
     drawPoints(){
-        this.ctx.clearRect(0, 0, this.canvas.width(), this.canvas.height());
+        this.ctx.clearRect(0, 0, this.canvasInterface.canvas.width, this.canvasInterface.canvas.height);
         this.ctx.beginPath();
         this.ctx.moveTo(this.points[0].x, this.points[0].y);
         for (let i = 1; i < this.points.length; i++) {
@@ -50,44 +89,49 @@ class CanvasView {
 
 class CanvasInputHandler {
     parent;
-    canvasDOM;
+    canvasInterface;
     canvasOffset;
     inputState;
 
-    constructor(canvasID, parent) {
+    constructor(canvasInterface, parent) {
         this.parent = parent;
-        this.canvasDOM = jQuery($(canvasID).get(0));
-        this.canvasOffset = this.canvasDOM.offset();
+        this.canvasInterface = canvasInterface;
+        this.canvasOffset = this.canvasInterface.canvas.getBoundingClientRect();
         this.inputState = new CanvasInputState();
 
+        this.addMouseInputListeners();
+    }
+
+    addMouseInputListeners() {
         let currentHandler = this;
 
-        this.canvasDOM.on('mouseenter', function () {
+        this.canvasInterface.canvas.addEventListener('mouseenter', function () {
             currentHandler.inputState.mouseInBounds = true;
         });
 
-        this.canvasDOM.on('mouseleave', function () {
+        this.canvasInterface.canvas.addEventListener('mouseleave', function () {
             currentHandler.inputState.mouseInBounds = false;
             currentHandler.parent.update();
         });
 
-        this.canvasDOM.on('mousedown', function () {
+        this.canvasInterface.canvas.addEventListener('mousedown', function () {
             currentHandler.inputState.mouseIsDown = true;
             currentHandler.parent.update();
         });
 
-        this.canvasDOM.on('mouseup', function () {
+        this.canvasInterface.canvas.addEventListener('mouseup', function () {
             currentHandler.inputState.mouseIsDown = false;
             currentHandler.parent.update();
         });
 
-        this.canvasDOM.on('mousemove', function (event) {
+        this.canvasInterface.canvas.addEventListener('mousemove', function (event) {
             currentHandler.inputState.mouseX = event.pageX - currentHandler.canvasOffset.left;
             currentHandler.inputState.mouseY = event.pageY - currentHandler.canvasOffset.top;
+            console.log(currentHandler.canvasOffset.left + " " + currentHandler.canvasOffset.top);
             currentHandler.parent.update();
         });
 
-        this.canvasDOM.on('mousewheel DOMMouseScroll', function (event) {
+        this.canvasInterface.canvas.addEventListener('mousewheel DOMMouseScroll', function (event) {
             if (event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
                 currentHandler.inputState.zoomState = 1;
             }
@@ -125,7 +169,6 @@ class CanvasModel {
     update(incomingInputState) {
         this.previousInputState.setAllFields(this.currentInputState);
         this.currentInputState.setAllFields(incomingInputState);
-        console.log(this.currentInputState.toString());
 
         this.zoomLevel += this.currentInputState.zoomState;
 
@@ -180,6 +223,9 @@ class CanvasInputState {
     }
 }
 
-let c = new InteractableCanvas('#canvas');
+let c = new InteractableCanvas('canvasTestContainer');
+let d = new InteractableCanvas('canvasTestContainer');
+d.canvasModel.setOriginalPoints([new Point(0,0), new Point(50,100)])
 c.canvasModel.setOriginalPoints([new Point(0,0), new Point(50,100), new Point(150,25)])
+d.init();
 c.init();
