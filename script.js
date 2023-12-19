@@ -30,7 +30,7 @@ class canvasInterface {
     canvas;
     toggleButton;
     resetButton;
-    closeButton;
+
     
     constructor() {
         this.mainContainer = document.createElement('div');
@@ -38,7 +38,6 @@ class canvasInterface {
         this.canvas = document.createElement('canvas');
         this.toggleButton = document.createElement('button');
         this.resetButton = document.createElement('button');
-        this.closeButton = document.createElement('button');
         this.setText();
         this.structureNodes();
     }
@@ -46,13 +45,11 @@ class canvasInterface {
     setText(){
         this.toggleButton.innerHTML = 'Toggle';
         this.resetButton.innerHTML = 'Reset';
-        this.closeButton.innerHTML = 'Close';
     }
 
     structureNodes() {
         this.topRow.appendChild(this.toggleButton);
         this.topRow.appendChild(this.resetButton);
-        this.topRow.appendChild(this.closeButton);
         this.mainContainer.appendChild(this.topRow);
         this.mainContainer.appendChild(this.canvas);
     }
@@ -100,6 +97,7 @@ class CanvasInputHandler {
         this.inputState = new CanvasInputState();
 
         this.addMouseInputListeners();
+        this.addButtonListeners();
     }
 
     addMouseInputListeners() {
@@ -140,6 +138,15 @@ class CanvasInputHandler {
             }
             currentHandler.parent.update();
             currentHandler.inputState.zoomState = 0;
+        });
+    }
+
+    addButtonListeners(){
+        this.canvasInterface.toggleButton.addEventListener('click', function(){
+            console.log('toggle');
+        });
+        this.canvasInterface.resetButton.addEventListener('click', function(){
+            console.log('reset');
         });
     }
 
