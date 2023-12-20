@@ -18,7 +18,7 @@ class InteractableCanvas {
 
     }
     init() {
-        this.canvasView.loadPointArray(this.canvasModel.transformedPoints);
+        this.canvasView.loadPointArray(this.canvasModel.originalPoints);
         this.update();
     }
 
@@ -84,9 +84,16 @@ class CanvasView {
     drawPoints() {
         this.ctx.clearRect(0, 0, this.canvasInterface.canvas.width, this.canvasInterface.canvas.height);
         this.ctx.beginPath();
-        this.ctx.moveTo(this.points[0].x, this.points[0].y);
+        this.ctx.moveTo(
+            this.points[0].x + this.canvasDisplaySettings.xShift, 
+            this.points[0].y + this.canvasDisplaySettings.yShift
+            );
+
         for (let i = 1; i < this.points.length; i++) {
-            this.ctx.lineTo(this.points[i].x, this.points[i].y);
+            this.ctx.lineTo(
+                this.points[i].x + this.canvasDisplaySettings.xShift,
+                this.points[i].y + this.canvasDisplaySettings.yShift
+                );
         }
         this.ctx.stroke();
     }
@@ -170,7 +177,6 @@ class CanvasInputHandler {
 
 class CanvasModel {
     originalPoints = [];
-    transformedPoints = [];
     currentPoint;
     previousInputState;
     currentInputState;
@@ -185,9 +191,6 @@ class CanvasModel {
 
     initializePoints(points) {
         this.originalPoints = points;
-        for (let i = 0; i < points.length; i++) {
-            this.transformedPoints.push(points[i].clone());
-        }
     }
 
     update(incomingInputState) {
@@ -218,11 +221,6 @@ class CanvasModel {
 
             this.canvasDisplaySettings.xShift += this.currentInputState.mouseX - this.previousInputState.mouseX;
             this.canvasDisplaySettings.yShift += this.currentInputState.mouseY - this.previousInputState.mouseY;
-
-            for (let i = 0; i < this.transformedPoints.length; i++) {
-                this.transformedPoints[i].x = this.originalPoints[i].x + this.canvasDisplaySettings.xShift;
-                this.transformedPoints[i].y = this.originalPoints[i].y + this.canvasDisplaySettings.yShift;
-            }
         }
     }
 
