@@ -84,18 +84,20 @@ class CanvasView {
     drawPoints() {
         this.ctx.clearRect(0, 0, this.canvasInterface.canvas.width, this.canvasInterface.canvas.height);
         this.ctx.beginPath();
-        this.ctx.moveTo(
-            this.points[0].x + this.canvasDisplaySettings.xShift, 
-            this.points[0].y + this.canvasDisplaySettings.yShift
-            );
+        let [transformedX, transformedY] = this.getTransformedCoordinates(this.points[0])
+        this.ctx.moveTo(transformedX,transformedY);
 
         for (let i = 1; i < this.points.length; i++) {
-            this.ctx.lineTo(
-                this.points[i].x + this.canvasDisplaySettings.xShift,
-                this.points[i].y + this.canvasDisplaySettings.yShift
-                );
+            [transformedX, transformedY] = this.getTransformedCoordinates(this.points[i])
+            this.ctx.lineTo(transformedX, transformedY);
         }
         this.ctx.stroke();
+    }
+
+    getTransformedCoordinates(point) {
+        let transformedX = (point.x * (1 + 0.05 * this.canvasDisplaySettings.zoomLevel)) + this.canvasDisplaySettings.xShift;
+        let transformedY = (point.y * (1 + 0.05 * this.canvasDisplaySettings.zoomLevel)) + this.canvasDisplaySettings.yShift;
+        return [transformedX, transformedY];
     }
 }
 
@@ -141,19 +143,19 @@ class CanvasInputHandler {
         this.canvasInterface.canvas.addEventListener('mousemove', function (event) {
             currentHandler.inputState.mouseX = event.pageX - currentHandler.canvasOffset.left;
             currentHandler.inputState.mouseY = event.pageY - currentHandler.canvasOffset.top;
-            console.log(currentHandler.canvasOffset.left + " " + currentHandler.canvasOffset.top);
             currentHandler.parent.update();
         });
 
-        this.canvasInterface.canvas.addEventListener('mousewheel DOMMouseScroll', function (event) {
-            if (event.originalEvent.wheelDelta > 0 || event.originalEvent.detail < 0) {
-                currentHandler.inputState.zoomState = 1;
+        this.canvasInterface.canvas.addEventListener('wheel', function (event) {
+            console.log(event.deltaY)
+            if (event.deltaY > 0) {
+                currentHandler.canvasDisplaySettings.zoomLevel += 1;
             }
             else {
-                currentHandler.inputState.zoomState = -1;
+                currentHandler.canvasDisplaySettings.zoomLevel -= 1;
             }
             currentHandler.parent.update();
-            currentHandler.inputState.zoomState = 0;
+            console.log(currentHandler.canvasDisplaySettings.zoomLevel);
         });
     }
 
@@ -225,16 +227,20 @@ class CanvasModel {
     }
 
     addPointFromMouseCoordinates() {
-        this.originalPoints.push(new Point(
-            this.currentInputState.mouseX - this.canvasDisplaySettings.xShift, 
-            this.currentInputState.mouseY - this.canvasDisplaySettings.yShift
-            ));
+        let [newX, newY] = this.getBaseCoordinates();
+        this.originalPoints.push(new Point(newX, newY));
         this.currentPoint = this.originalPoints[this.originalPoints.length - 1];
     }
 
     editPointFromMouseCoordinates() {
-        this.currentPoint.x = this.currentInputState.mouseX - this.canvasDisplaySettings.xShift;
-        this.currentPoint.y = this.currentInputState.mouseY - this.canvasDisplaySettings.yShift;
+        [this.currentPoint.x, this.currentPoint.y] = this.getBaseCoordinates();
+    }
+
+    getBaseCoordinates() {
+        return [
+            this.currentInputState.mouseX - this.canvasDisplaySettings.xShift,
+            this.currentInputState.mouseY - this.canvasDisplaySettings.yShift
+        ];
     }
 }
 
