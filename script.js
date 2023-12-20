@@ -225,13 +225,16 @@ class CanvasModel {
     }
 
     addPointFromMouseCoordinates() {
-        this.originalPoints.push(new Point(this.currentInputState.mouseX, this.currentInputState.mouseY));
+        this.originalPoints.push(new Point(
+            this.currentInputState.mouseX - this.canvasDisplaySettings.xShift, 
+            this.currentInputState.mouseY - this.canvasDisplaySettings.yShift
+            ));
         this.currentPoint = this.originalPoints[this.originalPoints.length - 1];
     }
 
     editPointFromMouseCoordinates() {
-        this.currentPoint.x = this.currentInputState.mouseX;
-        this.currentPoint.y = this.currentInputState.mouseY;
+        this.currentPoint.x = this.currentInputState.mouseX - this.canvasDisplaySettings.xShift;
+        this.currentPoint.y = this.currentInputState.mouseY - this.canvasDisplaySettings.yShift;
     }
 }
 
