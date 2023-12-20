@@ -3,23 +3,23 @@ class InteractableCanvas {
     canvasView;
     canvasInputHandler;
     canvasModel;
+    canvasDisplaySettings;
 
     constructor(destinationContainerID) {
         this.canvasInterface = new canvasInterface();
         document.getElementById(destinationContainerID).append(this.canvasInterface.mainContainer);
-        this.canvasView = new CanvasView(this.canvasInterface);
-        this.canvasInputHandler = new CanvasInputHandler(this.canvasInterface, this);
-        this.canvasModel = new CanvasModel();
+        this.canvasDisplaySettings = new CanvasDisplaySettings();
+
+        this.canvasView = new CanvasView(this.canvasInterface, this.canvasDisplaySettings);
+        this.canvasInputHandler = new CanvasInputHandler(this.canvasInterface, this, this.canvasDisplaySettings);
+        this.canvasModel = new CanvasModel(this.canvasDisplaySettings);
+        
 
 
     }
     init() {
-        this.canvasView.loadPointArray(this.canvasModel.originalPoints);
+        this.canvasView.loadPointArray(this.canvasModel.transformedPoints);
         this.update();
-    }
-
-    toggleDrawing() {
-        this.canvasModel.isDrawing = !this.canvasModel.isDrawing;
     }
 
     update() {
@@ -40,6 +40,8 @@ class canvasInterface {
         this.mainContainer = document.createElement('div');
         this.topRow = document.createElement('div');
         this.canvas = document.createElement('canvas');
+        this.canvas.width = 500;
+        this.canvas.height = 500;
         this.toggleButton = document.createElement('button');
         this.resetButton = document.createElement('button');
         this.setText();
@@ -63,10 +65,12 @@ class canvasInterface {
 class CanvasView {
     points;
     canvasInterface;
+    canvasDisplaySettings;
     ctx;
-
-    constructor(canvasInterface) {
+    
+    constructor(canvasInterface, canvasDisplaySettings) {
         this.canvasInterface = canvasInterface;
+        this.canvasDisplaySettings = canvasDisplaySettings;
         this.ctx = canvasInterface.canvas.getContext('2d');
 
         this.ctx.strokeStyle = '#000000';
@@ -91,12 +95,14 @@ class CanvasView {
 class CanvasInputHandler {
     parent;
     canvasInterface;
+    canvasDisplaySettings;
     canvasOffset;
     inputState;
 
-    constructor(canvasInterface, parent) {
+    constructor(canvasInterface, parent, canvasDisplaySettings) {
         this.parent = parent;
         this.canvasInterface = canvasInterface;
+        this.canvasDisplaySettings = canvasDisplaySettings;
         this.canvasOffset = this.canvasInterface.canvas.getBoundingClientRect();
         this.inputState = new CanvasInputState();
 
@@ -148,7 +154,7 @@ class CanvasInputHandler {
 
         this.canvasInterface.toggleButton.addEventListener('click', function () {
             console.log('TOGGLE BUTTON CLICKED');
-            currentHandler.parent.toggleDrawing();
+            currentHandler.canvasDisplaySettings.isDrawing = !currentHandler.canvasDisplaySettings.isDrawing;
             currentHandler.parent.update();
         });
         this.canvasInterface.resetButton.addEventListener('click', function () {
@@ -164,28 +170,32 @@ class CanvasInputHandler {
 
 class CanvasModel {
     originalPoints = [];
+    transformedPoints = [];
     currentPoint;
     previousInputState;
     currentInputState;
-    isDrawing = true;
+    
+    canvasDisplaySettings;
 
-    zoomLevel = 0;
-
-    constructor() {
+    constructor(canvasDisplaySettings) {
+        this.canvasDisplaySettings = canvasDisplaySettings;
         this.previousInputState = new CanvasInputState();
         this.currentInputState = new CanvasInputState();
     }
 
-    setOriginalPoints(points) {
+    initializePoints(points) {
         this.originalPoints = points;
+        for (let i = 0; i < points.length; i++) {
+            this.transformedPoints.push(points[i].clone());
+        }
     }
 
     update(incomingInputState) {
         this.previousInputState.setAllFields(this.currentInputState);
         this.currentInputState.setAllFields(incomingInputState);
 
-        this.zoomLevel += this.currentInputState.zoomState;
-        if (this.isDrawing) {
+        this.canvasDisplaySettings.zoomLevel += this.currentInputState.zoomState;
+        if (this.canvasDisplaySettings.isDrawing) {
             this.updatePoints();
         } else {
             this.updatePosition();
@@ -205,6 +215,14 @@ class CanvasModel {
     updatePosition() {
         if (this.previousInputState.mouseIsDown && this.currentInputState.mouseIsDown) {
             console.log('MOVING CANVAS')
+
+            this.canvasDisplaySettings.xShift += this.currentInputState.mouseX - this.previousInputState.mouseX;
+            this.canvasDisplaySettings.yShift += this.currentInputState.mouseY - this.previousInputState.mouseY;
+
+            for (let i = 0; i < this.transformedPoints.length; i++) {
+                this.transformedPoints[i].x = this.originalPoints[i].x + this.canvasDisplaySettings.xShift;
+                this.transformedPoints[i].y = this.originalPoints[i].y + this.canvasDisplaySettings.yShift;
+            }
         }
     }
 
@@ -219,6 +237,13 @@ class CanvasModel {
     }
 }
 
+class CanvasDisplaySettings {
+    zoomLevel = 0;
+    xShift = 0;
+    yShift = 0;
+    isDrawing = true;
+}
+
 class Point {
     x;
     y;
@@ -226,6 +251,15 @@ class Point {
     constructor(x, y) {
         this.x = x;
         this.y = y;
+    }
+
+    clone() {
+        return new Point(this.x, this.y);
+    }
+
+    copy(point){
+        this.x = point.x;
+        this.y = point.y;
     }
 
 }
@@ -252,7 +286,7 @@ class CanvasInputState {
 
 let c = new InteractableCanvas('canvasTestContainer');
 let d = new InteractableCanvas('canvasTestContainer');
-d.canvasModel.setOriginalPoints([new Point(0, 0), new Point(50, 100)])
-c.canvasModel.setOriginalPoints([new Point(0, 0), new Point(50, 100), new Point(150, 25)])
+d.canvasModel.initializePoints([new Point(0, 0), new Point(50, 100)])
+c.canvasModel.initializePoints([new Point(0, 0), new Point(50, 100), new Point(150, 25)])
 d.init();
 c.init();
