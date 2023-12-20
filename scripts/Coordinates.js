@@ -22,13 +22,14 @@ export class CoordinateTransformations {
     static getTransformedCoordinates(point, canvasDisplaySettings) {
         let transformedX = (point.x * canvasDisplaySettings.zoomLevel) + canvasDisplaySettings.currentXShift;
         let transformedY = (point.y * canvasDisplaySettings.zoomLevel) + canvasDisplaySettings.currentYShift;
+        console.log("transformedX: " + transformedX + " transformedY: " + transformedY);
         return [transformedX, transformedY];
     }
 
     static getBaseCoordinates(currentInputState, canvasDisplaySettings) {
         return [
-            currentInputState.mouseX - canvasDisplaySettings.xShift,
-            currentInputState.mouseY - canvasDisplaySettings.yShift
+            currentInputState.mouseX - canvasDisplaySettings.currentXShift,
+            currentInputState.mouseY - canvasDisplaySettings.currentYShift
         ];
     }
 }

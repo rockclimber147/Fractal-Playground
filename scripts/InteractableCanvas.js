@@ -188,7 +188,7 @@ class CanvasModel {
     }
 
     addPointFromMouseCoordinates() {
-        let [newX, newY] = this.getBaseCoordinates();
+        let [newX, newY] = CoordinateTransformations.getBaseCoordinates(this.currentInputState, this.canvasDisplaySettings);
         this.originalPoints.push(new Point(newX, newY));
         this.currentPoint = this.originalPoints[this.originalPoints.length - 1];
     }
@@ -202,7 +202,8 @@ class CanvasModel {
 
 let c = new InteractableCanvas('canvasTestContainer');
 let d = new InteractableCanvas('canvasTestContainer');
+
+c.canvasModel.initializePoints([new Point(70, 0), new Point(50, 120), new Point(150, 25)])
 d.canvasModel.initializePoints([new Point(0, 0), new Point(50, 100)])
-c.canvasModel.initializePoints([new Point(0, 0), new Point(50, 100), new Point(150, 25)])
 d.init();
 c.init();
