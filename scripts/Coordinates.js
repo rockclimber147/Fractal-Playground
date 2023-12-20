@@ -19,17 +19,32 @@ export class Point {
 }
 
 export class CoordinateTransformations {
-    static getTransformedCoordinates(point, canvasDisplaySettings) {
-        let transformedX = (point.x * canvasDisplaySettings.zoomLevel) + canvasDisplaySettings.currentXShift;
-        let transformedY = (point.y * canvasDisplaySettings.zoomLevel) + canvasDisplaySettings.currentYShift;
-        console.log("transformedX: " + transformedX + " transformedY: " + transformedY);
-        return [transformedX, transformedY];
+    // static modelToCanvas(point, canvasDisplaySettings) {
+    //     return [
+    //         (point.x / canvasDisplaySettings.zoomLevel) + canvasDisplaySettings.xShift,
+    //         (point.y / canvasDisplaySettings.zoomLevel) + canvasDisplaySettings.yShift
+    //     ]
+    // }
+
+    // static canvasToModel(currentInputState, canvasDisplaySettings) {
+    //     return [
+    //         (currentInputState.mouseX - canvasDisplaySettings.xShift) * canvasDisplaySettings.zoomLevel,
+    //         (currentInputState.mouseY - canvasDisplaySettings.yShift) * canvasDisplaySettings.zoomLevel
+    //     ];
+    // }
+
+    static modelToCanvas(point, canvasDisplaySettings) {
+        
+        return [
+            (point.x - canvasDisplaySettings.xShift) * canvasDisplaySettings.zoomLevel,
+            (point.y - canvasDisplaySettings.yShift) * canvasDisplaySettings.zoomLevel
+        ];
     }
 
-    static getBaseCoordinates(currentInputState, canvasDisplaySettings) {
+    static canvasToModel(currentInputState, canvasDisplaySettings) {
         return [
-            currentInputState.mouseX - canvasDisplaySettings.currentXShift,
-            currentInputState.mouseY - canvasDisplaySettings.currentYShift
-        ];
+            (currentInputState.mouseX / canvasDisplaySettings.zoomLevel) + canvasDisplaySettings.xShift,
+            (currentInputState.mouseY / canvasDisplaySettings.zoomLevel) + canvasDisplaySettings.yShift
+        ]
     }
 }

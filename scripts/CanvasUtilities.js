@@ -3,7 +3,7 @@ export class CanvasInputState {
     mouseInBounds = false;
     mouseX = 0;
     mouseY = 0;
-    justZoomed = false;
+    zoomState = 0;;
 
     setAllFields(canvasInputState) {
         this.mouseIsDown = canvasInputState.mouseIsDown;
@@ -19,11 +19,9 @@ export class CanvasInputState {
 }
 
 export class CanvasDisplaySettings {
-    cumulativeXShift = 0;
-    cumulativeYShift = 0;
     zoomLevel = 1;
-    currentXShift = 0;
-    currentYShift = 0;
+    xShift = 0;
+    yShift = 0;
     isDrawing = true;
 }
 

@@ -52,11 +52,11 @@ class CanvasView {
     drawPoints() {
         this.ctx.clearRect(0, 0, this.canvasInterface.canvas.width, this.canvasInterface.canvas.height);
         this.ctx.beginPath();
-        let [transformedX, transformedY] = CoordinateTransformations.getTransformedCoordinates(this.points[0], this.canvasDisplaySettings)
+        let [transformedX, transformedY] = CoordinateTransformations.modelToCanvas(this.points[0], this.canvasDisplaySettings)
         this.ctx.moveTo(transformedX,transformedY);
 
         for (let i = 1; i < this.points.length; i++) {
-            [transformedX, transformedY] = CoordinateTransformations.getTransformedCoordinates(this.points[i], this.canvasDisplaySettings)
+            [transformedX, transformedY] = CoordinateTransformations.modelToCanvas(this.points[i], this.canvasDisplaySettings)
             this.ctx.lineTo(transformedX, transformedY);
         }
         this.ctx.stroke();
@@ -109,16 +109,9 @@ class CanvasInputHandler {
         });
 
         this.canvasInterface.canvas.addEventListener('wheel', function (event) {
-            if (event.deltaY > 0) {
-                currentHandler.canvasDisplaySettings.zoomLevel *= 2;
-            }
-            else {
-                currentHandler.canvasDisplaySettings.zoomLevel /= 2;
-            }
-            currentHandler.inputState.justZoomed = true;
+            currentHandler.inputState.zoomState = event.deltaY;
             currentHandler.parent.update();
-            currentHandler.inputState.justZoomed = false;
-            console.log(currentHandler.canvasDisplaySettings);
+            currentHandler.inputState.zoomState = 0;
         });
     }
 
@@ -179,22 +172,32 @@ class CanvasModel {
     }
 
     updatePosition() {
-        if (this.previousInputState.mouseIsDown && this.currentInputState.mouseIsDown) {
+        if (this.currentInputState.zoomState != 0) {
+            console.log('ZOOMING CANVAS')
+
+            let mouseCoordsBeforeZoom = CoordinateTransformations.canvasToModel(this.currentInputState, this.canvasDisplaySettings);
+            this.canvasDisplaySettings.zoomLevel *= 1 - this.currentInputState.zoomState / 1000;
+            let mouseCoordsAfterZoom = CoordinateTransformations.canvasToModel(this.currentInputState, this.canvasDisplaySettings);
+            console.log(mouseCoordsBeforeZoom, mouseCoordsAfterZoom, [mouseCoordsBeforeZoom[0] - mouseCoordsAfterZoom[0], mouseCoordsBeforeZoom[1] - mouseCoordsAfterZoom[1]])
+            this.canvasDisplaySettings.xShift += (mouseCoordsBeforeZoom[0] - mouseCoordsAfterZoom[0]);
+            this.canvasDisplaySettings.yShift += (mouseCoordsBeforeZoom[1] - mouseCoordsAfterZoom[1]);
+
+        } else if (this.previousInputState.mouseIsDown && this.currentInputState.mouseIsDown) {
             console.log('MOVING CANVAS')
 
-            this.canvasDisplaySettings.cumulativeXShift += this.currentInputState.mouseX - this.previousInputState.mouseX;
-            this.canvasDisplaySettings.cumulativeYShift += this.currentInputState.mouseY - this.previousInputState.mouseY;
+            this.canvasDisplaySettings.xShift -= (this.currentInputState.mouseX - this.previousInputState.mouseX) / this.canvasDisplaySettings.zoomLevel;
+            this.canvasDisplaySettings.yShift -= (this.currentInputState.mouseY - this.previousInputState.mouseY) / this.canvasDisplaySettings.zoomLevel;
         }
     }
 
     addPointFromMouseCoordinates() {
-        let [newX, newY] = CoordinateTransformations.getBaseCoordinates(this.currentInputState, this.canvasDisplaySettings);
+        let [newX, newY] = CoordinateTransformations.canvasToModel(this.currentInputState, this.canvasDisplaySettings);
         this.originalPoints.push(new Point(newX, newY));
         this.currentPoint = this.originalPoints[this.originalPoints.length - 1];
     }
 
     editPointFromMouseCoordinates() {
-        [this.currentPoint.x, this.currentPoint.y] = CoordinateTransformations.getBaseCoordinates(this.currentInputState, this.canvasDisplaySettings);
+        [this.currentPoint.x, this.currentPoint.y] = CoordinateTransformations.canvasToModel(this.currentInputState, this.canvasDisplaySettings);
     }
 }
 
@@ -203,7 +206,7 @@ class CanvasModel {
 let c = new InteractableCanvas('canvasTestContainer');
 let d = new InteractableCanvas('canvasTestContainer');
 
-c.canvasModel.initializePoints([new Point(70, 0), new Point(50, 120), new Point(150, 25)])
+c.canvasModel.initializePoints([new Point(0, 0), new Point(100, 0), new Point(100, 100)])
 d.canvasModel.initializePoints([new Point(0, 0), new Point(50, 100)])
 d.init();
 c.init();
