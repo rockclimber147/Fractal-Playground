@@ -1,6 +1,7 @@
 import {CanvasInputState, CanvasDisplaySettings, canvasInterface} from './CanvasUtilities.js';
 import { Point, CoordinateTransformations } from './Coordinates.js';
-class InteractableCanvas {
+
+export class InteractableCanvas {
     canvasInterface;
     canvasView;
     canvasInputHandler;
@@ -15,10 +16,8 @@ class InteractableCanvas {
         this.canvasView = new CanvasView(this.canvasInterface, this.canvasDisplaySettings);
         this.canvasInputHandler = new CanvasInputHandler(this.canvasInterface, this, this.canvasDisplaySettings);
         this.canvasModel = new CanvasModel(this.canvasDisplaySettings);
-        
-
-
     }
+
     init() {
         this.canvasView.loadPointArray(this.canvasModel.originalPoints);
         this.update();
@@ -27,6 +26,13 @@ class InteractableCanvas {
     update() {
         this.canvasModel.update(this.canvasInputHandler.getInputState());
         this.canvasView.drawPoints();
+    }
+
+    reset() {
+        this.canvasModel.initializePoints(this.canvasModel.originalPoints);
+        this.canvasDisplaySettings.reset();
+        this.init();
+        this.update();
     }
 }
 
@@ -42,7 +48,9 @@ class CanvasView {
         this.ctx = canvasInterface.canvas.getContext('2d');
 
         this.ctx.strokeStyle = '#000000';
-        this.ctx.lineWidth = 5;
+        this.ctx.lineCap = "round";
+        this.ctx.lineJoin = "round";
+        this.ctx.lineWidth = 10;
     }
 
     loadPointArray(points) {
@@ -64,8 +72,8 @@ class CanvasView {
 }
 
 class CanvasInputHandler {
-    parent;
     canvasInterface;
+    parent;
     canvasDisplaySettings;
     canvasOffset;
     inputState;
@@ -120,9 +128,11 @@ class CanvasInputHandler {
         this.canvasInterface.toggleButton.addEventListener('click', function () {
             console.log('TOGGLE BUTTON CLICKED');
             currentHandler.canvasDisplaySettings.isDrawing = !currentHandler.canvasDisplaySettings.isDrawing;
+            currentHandler.canvasInterface.toggleButton.innerHTML = currentHandler.canvasDisplaySettings.isDrawing ? 'Draw Mode' : 'Move Mode';
             currentHandler.parent.update();
         });
         this.canvasInterface.resetButton.addEventListener('click', function () {
+            currentHandler.parent.reset();
             console.log('RESET BUTTON CLICKED');
         });
     }
@@ -207,6 +217,6 @@ let c = new InteractableCanvas('canvasTestContainer');
 let d = new InteractableCanvas('canvasTestContainer');
 
 c.canvasModel.initializePoints([new Point(0, 0), new Point(100, 0), new Point(100, 100)])
-d.canvasModel.initializePoints([new Point(0, 0), new Point(50, 100)])
+d.canvasModel.initializePoints([new Point(0, 0), new Point(100, 0), new Point(100, 100)])
 d.init();
 c.init();

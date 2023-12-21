@@ -3,7 +3,7 @@ export class CanvasInputState {
     mouseInBounds = false;
     mouseX = 0;
     mouseY = 0;
-    zoomState = 0;;
+    zoomState = 0;
 
     setAllFields(canvasInputState) {
         this.mouseIsDown = canvasInputState.mouseIsDown;
@@ -23,6 +23,12 @@ export class CanvasDisplaySettings {
     xShift = 0;
     yShift = 0;
     isDrawing = true;
+
+    reset() {
+        this.zoomLevel = 1;
+        this.xShift = 0;
+        this.yShift = 0;
+    }
 }
 
 export class canvasInterface {
@@ -46,7 +52,7 @@ export class canvasInterface {
     }
 
     setText() {
-        this.toggleButton.innerHTML = 'Toggle';
+        this.toggleButton.innerHTML = 'Draw Mode';
         this.resetButton.innerHTML = 'Reset';
     }
 
@@ -56,5 +62,4 @@ export class canvasInterface {
         this.mainContainer.appendChild(this.topRow);
         this.mainContainer.appendChild(this.canvas);
     }
-
 }

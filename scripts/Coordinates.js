@@ -19,20 +19,6 @@ export class Point {
 }
 
 export class CoordinateTransformations {
-    // static modelToCanvas(point, canvasDisplaySettings) {
-    //     return [
-    //         (point.x / canvasDisplaySettings.zoomLevel) + canvasDisplaySettings.xShift,
-    //         (point.y / canvasDisplaySettings.zoomLevel) + canvasDisplaySettings.yShift
-    //     ]
-    // }
-
-    // static canvasToModel(currentInputState, canvasDisplaySettings) {
-    //     return [
-    //         (currentInputState.mouseX - canvasDisplaySettings.xShift) * canvasDisplaySettings.zoomLevel,
-    //         (currentInputState.mouseY - canvasDisplaySettings.yShift) * canvasDisplaySettings.zoomLevel
-    //     ];
-    // }
-
     static modelToCanvas(point, canvasDisplaySettings) {
         
         return [
