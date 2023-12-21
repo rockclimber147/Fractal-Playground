@@ -1,12 +1,13 @@
-import {CanvasInputState, CanvasDisplaySettings, canvasInterface} from './CanvasUtilities.js';
+import { CanvasInputState, CanvasDisplaySettings, canvasInterface } from './CanvasUtilities.js';
 import { Point, CoordinateTransformations } from './Coordinates.js';
 
 export class InteractableCanvas {
     canvasInterface;
+    canvasDisplaySettings;
+
     canvasView;
     canvasInputHandler;
     canvasModel;
-    canvasDisplaySettings;
 
     constructor(destinationContainerID, points) {
         this.canvasInterface = new canvasInterface();
@@ -220,11 +221,3 @@ class CanvasModel {
         [this.editingPoint.x, this.editingPoint.y] = CoordinateTransformations.canvasToModel(this.currentInputState, this.canvasDisplaySettings);
     }
 }
-
-
-
-let c = new InteractableCanvas('canvasTestContainer', [new Point(0, 0), new Point(100, 0), new Point(100, 100)]);
-let d = new InteractableCanvas('canvasTestContainer', [new Point(0, 0), new Point(100, 0), new Point(100, 100)]);
-
-d.init();
-c.init();
