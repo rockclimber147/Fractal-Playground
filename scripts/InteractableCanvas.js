@@ -16,12 +16,12 @@ export class InteractableCanvas {
 
         this.canvasView = new CanvasView(this.canvasInterface, this.canvasDisplaySettings);
         this.canvasInputHandler = new CanvasInputHandler(this.canvasInterface, this, this.canvasDisplaySettings);
-        this.canvasModel = new CanvasModel(this.canvasDisplaySettings);
     }
 
     init(canvasModel) {
         this.canvasModel = canvasModel;
         this.canvasModel.loadDisplaySettings(this.canvasDisplaySettings);
+        this.canvasModel.initializePoints();
         this.canvasView.loadPointArray(this.canvasModel.currentPoints);
         this.update();
     }
@@ -160,8 +160,6 @@ export class CanvasModel {
     canvasDisplaySettings;
 
     constructor() {
-        this.initializePoints();
-        this.setCurrentPointsToDefault();
         this.previousInputState = new CanvasInputState();
         this.currentInputState = new CanvasInputState();
     }
@@ -175,6 +173,8 @@ export class CanvasModel {
         this.defaultPoints.push(new Point(0, 0));
         this.defaultPoints.push(new Point(100, 0));
         this.defaultPoints.push(new Point(100, 100));
+
+        this.setCurrentPointsToDefault();
     }
 
     setCurrentPointsToDefault() {
