@@ -12,7 +12,7 @@ export class InteractableCanvas {
     constructor(destinationContainerID) {
         this.canvasInterface = new canvasInterface();
         document.getElementById(destinationContainerID).append(this.canvasInterface.mainContainer);
-        this.canvasDisplaySettings = new CanvasDisplaySettings();
+        this.canvasDisplaySettings = new CanvasDisplaySettings(this.canvasInterface.canvas.width, this.canvasInterface.canvas.height);
 
         this.canvasView = new CanvasView(this.canvasInterface, this.canvasDisplaySettings);
         this.canvasInputHandler = new CanvasInputHandler(this.canvasInterface, this, this.canvasDisplaySettings);
@@ -34,7 +34,7 @@ export class InteractableCanvas {
     reset() {
         this.canvasModel.setCurrentPointsToDefault(this.canvasModel.defaultPoints);
         this.canvasDisplaySettings.reset();
-        this.init();
+        this.canvasView.loadPointArray(this.canvasModel.currentPoints);
         this.update();
     }
 

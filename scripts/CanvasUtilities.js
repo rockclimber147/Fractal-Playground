@@ -24,6 +24,14 @@ export class CanvasDisplaySettings {
     yShift = 0;
     isDrawing = true;
 
+    canvasHeight;
+    canvasWidth;
+
+    constructor(canvasWidth, canvasHeight) {
+        this.canvasHeight = canvasHeight;
+        this.canvasWidth = canvasWidth;
+    }
+
     reset() {
         this.zoomLevel = 1;
         this.xShift = 0;
