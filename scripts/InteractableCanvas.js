@@ -8,18 +8,18 @@ export class InteractableCanvas {
     canvasModel;
     canvasDisplaySettings;
 
-    constructor(destinationContainerID) {
+    constructor(destinationContainerID, points) {
         this.canvasInterface = new canvasInterface();
         document.getElementById(destinationContainerID).append(this.canvasInterface.mainContainer);
         this.canvasDisplaySettings = new CanvasDisplaySettings();
 
         this.canvasView = new CanvasView(this.canvasInterface, this.canvasDisplaySettings);
         this.canvasInputHandler = new CanvasInputHandler(this.canvasInterface, this, this.canvasDisplaySettings);
-        this.canvasModel = new CanvasModel(this.canvasDisplaySettings);
+        this.canvasModel = new CanvasModel(this.canvasDisplaySettings, points);
     }
 
     init() {
-        this.canvasView.loadPointArray(this.canvasModel.originalPoints);
+        this.canvasView.loadPointArray(this.canvasModel.currentPoints);
         this.update();
     }
 
@@ -29,10 +29,14 @@ export class InteractableCanvas {
     }
 
     reset() {
-        this.canvasModel.initializePoints(this.canvasModel.originalPoints);
+        this.canvasModel.initializePoints(this.canvasModel.defaultPoints);
         this.canvasDisplaySettings.reset();
         this.init();
         this.update();
+    }
+
+    setDimensions(width, height) {
+        this.canvasInterface.setDimensions(width, height);
     }
 }
 
@@ -50,7 +54,7 @@ class CanvasView {
         this.ctx.strokeStyle = '#000000';
         this.ctx.lineCap = "round";
         this.ctx.lineJoin = "round";
-        this.ctx.lineWidth = 10;
+        this.ctx.lineWidth = 3;
     }
 
     loadPointArray(points) {
@@ -144,21 +148,27 @@ class CanvasInputHandler {
 }
 
 class CanvasModel {
-    originalPoints = [];
-    currentPoint;
+    defaultPoints;
+    currentPoints = [];
+
+    editingPoint;
     previousInputState;
     currentInputState;
-    
     canvasDisplaySettings;
 
-    constructor(canvasDisplaySettings) {
+    constructor(canvasDisplaySettings, points) {
+        this.defaultPoints = points;
+        this.initializePoints();
         this.canvasDisplaySettings = canvasDisplaySettings;
         this.previousInputState = new CanvasInputState();
         this.currentInputState = new CanvasInputState();
     }
 
-    initializePoints(points) {
-        this.originalPoints = points;
+    initializePoints() {
+        this.currentPoints.length = 0;
+        for (let i = 0; i < this.defaultPoints.length; i++) {
+            this.currentPoints.push(this.defaultPoints[i].clone());
+        }
     }
 
     update(incomingInputState) {
@@ -202,21 +212,19 @@ class CanvasModel {
 
     addPointFromMouseCoordinates() {
         let [newX, newY] = CoordinateTransformations.canvasToModel(this.currentInputState, this.canvasDisplaySettings);
-        this.originalPoints.push(new Point(newX, newY));
-        this.currentPoint = this.originalPoints[this.originalPoints.length - 1];
+        this.currentPoints.push(new Point(newX, newY));
+        this.editingPoint = this.currentPoints[this.currentPoints.length - 1];
     }
 
     editPointFromMouseCoordinates() {
-        [this.currentPoint.x, this.currentPoint.y] = CoordinateTransformations.canvasToModel(this.currentInputState, this.canvasDisplaySettings);
+        [this.editingPoint.x, this.editingPoint.y] = CoordinateTransformations.canvasToModel(this.currentInputState, this.canvasDisplaySettings);
     }
 }
 
 
 
-let c = new InteractableCanvas('canvasTestContainer');
-let d = new InteractableCanvas('canvasTestContainer');
+let c = new InteractableCanvas('canvasTestContainer', [new Point(0, 0), new Point(100, 0), new Point(100, 100)]);
+let d = new InteractableCanvas('canvasTestContainer', [new Point(0, 0), new Point(100, 0), new Point(100, 100)]);
 
-c.canvasModel.initializePoints([new Point(0, 0), new Point(100, 0), new Point(100, 100)])
-d.canvasModel.initializePoints([new Point(0, 0), new Point(100, 0), new Point(100, 100)])
 d.init();
 c.init();

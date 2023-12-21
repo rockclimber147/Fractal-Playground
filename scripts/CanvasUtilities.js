@@ -62,4 +62,9 @@ export class canvasInterface {
         this.mainContainer.appendChild(this.topRow);
         this.mainContainer.appendChild(this.canvas);
     }
+
+    setDimensions(width, height) {
+        this.canvas.width = width;
+        this.canvas.height = height;
+    }
 }
