@@ -1,4 +1,4 @@
-import { InteractableCanvas, CanvasModel } from './InteractableCanvas.js';
+import { InteractableCanvas, CanvasModel, CModelScaleRotate } from './InteractableCanvas.js';
 
 let c = new InteractableCanvas('canvasMainContainer');
-c.init(new CanvasModel());
+c.init(new CModelScaleRotate());

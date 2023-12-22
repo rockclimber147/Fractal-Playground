@@ -33,4 +33,23 @@ export class CoordinateTransformations {
             (currentInputState.mouseY / canvasDisplaySettings.zoomLevel) + canvasDisplaySettings.yShift
         ]
     }
+
+    static getRotationScaleMatrix(origin, v1, v2) {
+        let v1Prime = new Point(v1.x - origin.x, v1.y - origin.y);
+        let v2Prime = new Point(v2.x - origin.x, v2.y - origin.y);
+
+        let v1PrimeLength = Math.sqrt(v1Prime.x * v1Prime.x + v1Prime.y * v1Prime.y);
+        let v2PrimeLength = Math.sqrt(v2Prime.x * v2Prime.x + v2Prime.y * v2Prime.y);
+
+        let theta = Math.acos((v1Prime.x * v2Prime.x + v1Prime.y * v2Prime.y) / (v1PrimeLength * v2PrimeLength));
+        let ratio = v1PrimeLength / v2PrimeLength;
+
+        let scaledCosine = ratio * Math.cos(theta);
+        let scaledSine = ratio * Math.sin(theta); 
+
+        return [
+            [scaledCosine, -scaledSine],
+            [scaledSine, scaledCosine]
+        ];
+    }
 }

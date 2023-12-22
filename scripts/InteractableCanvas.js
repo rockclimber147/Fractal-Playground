@@ -169,11 +169,13 @@ export class CanvasModel {
     }
 
     initializePoints(){
-        this.defaultPoints = [];
-        this.defaultPoints.push(new Point(0, 0));
-        this.defaultPoints.push(new Point(100, 0));
-        this.defaultPoints.push(new Point(100, 100));
+        let width = this.canvasDisplaySettings.canvasWidth;
+        let height = this.canvasDisplaySettings.canvasHeight;
 
+        this.defaultPoints = [];
+        console.log(width, height / 2)
+        this.defaultPoints.push(new Point(0.2 * width, height / 2));
+        this.defaultPoints.push(new Point(0.8 * width, height / 2));
         this.setCurrentPointsToDefault();
     }
 
@@ -231,5 +233,27 @@ export class CanvasModel {
 
     editPointFromMouseCoordinates() {
         [this.editingPoint.x, this.editingPoint.y] = CoordinateTransformations.canvasToModel(this.currentInputState, this.canvasDisplaySettings);
+    }
+}
+
+export class CModelScaleRotate extends CanvasModel {
+
+    initializePoints() {
+        let width = this.canvasDisplaySettings.canvasWidth;
+        let height = this.canvasDisplaySettings.canvasHeight;
+
+        this.defaultPoints = [];
+        this.defaultPoints.push(new Point(0.1 * width, height / 2));
+        this.defaultPoints.push(new Point(0.5 * width, height / 2));
+        this.defaultPoints.push(new Point(0.5 * width, 0.1 * height));
+        this.setCurrentPointsToDefault();
+        this.editingPoint = this.currentPoints[2];
+    }
+
+    updatePoints() {
+        if (this.currentInputState.mouseIsDown) {
+            console.log('MOVING POINT')
+            this.editPointFromMouseCoordinates();
+        }
     }
 }
