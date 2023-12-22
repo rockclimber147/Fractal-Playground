@@ -49,11 +49,11 @@ export class CoordinateTransformations {
         let v2PrimeLength = Math.sqrt(v2Prime.x * v2Prime.x + v2Prime.y * v2Prime.y);
 
         let theta = Math.acos((v1Prime.x * v2Prime.x + v1Prime.y * v2Prime.y) / (v1PrimeLength * v2PrimeLength));
-        let ratio = v1PrimeLength / v2PrimeLength;
+        let ratio = v2PrimeLength / v1PrimeLength;
 
         let scaledCosine = ratio * Math.cos(theta);
         let scaledSine = ratio * Math.sin(theta); 
-
+        console.log(scaledCosine, scaledSine)
         return [
             [scaledCosine, -scaledSine],
             [scaledSine, scaledCosine]
