@@ -26,6 +26,11 @@ export class InteractableCanvas {
         this.update();
     }
 
+    loadPointArray(pointArray){
+        this.canvasModel.currentPoints = pointArray;
+        this.canvasView.loadPointArray(this.canvasModel.currentPoints);
+    }
+
     update() {
         this.canvasModel.update(this.canvasInputHandler.getInputState());
         this.canvasView.drawPoints();

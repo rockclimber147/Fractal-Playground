@@ -35,6 +35,8 @@ function update(){
         toAdd[i].y += deltaY;
     }
 
-    mainCanvas.canvasModel.currentPoints.push(...toAdd);
+    // mainCanvas.canvasModel.currentPoints.push(...toAdd);
+    mainCanvas.loadPointArray(mainCanvas.canvasModel.currentPoints.concat(toAdd));
+    console.log(mainCanvas.canvasModel.currentPoints.length)
     mainCanvas.update();
 }
