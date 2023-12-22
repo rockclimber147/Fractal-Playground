@@ -16,6 +16,13 @@ export class Point {
         this.y = point.y;
     }
 
+    getMatrixTransformationResult(matrix) {
+        return new Point(
+            this.x * matrix[0][0] + this.y * matrix[0][1],
+            this.x * matrix[1][0] + this.y * matrix[1][1]
+        );
+    }
+
 }
 
 export class CoordinateTransformations {
